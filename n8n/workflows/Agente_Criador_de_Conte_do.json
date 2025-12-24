@@ -1,0 +1,206 @@
+{
+  "name": "Agente Criador de Conteúdo",
+  "nodes": [
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to search the internet",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"api_key\": \"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\",\n    \"query\": \"{searchTerm}\",\n    \"search_depth\": \"basic\",\n    \"include_answer\": true,\n    \"topic\": \"news\",\n    \"include_raw_content\": true,\n    \"max_results\": 3\n} ",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "searchTerm",
+              "description": "What the user requested to write the blog post about",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        360
+      ],
+      "id": "f0af74a9-9fde-4f1c-89c1-bb62df9bde7b",
+      "name": "Tavily"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -700,
+        80
+      ],
+      "id": "15fed980-0b2d-44e4-bea4-b4bf9fee8aba",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -500,
+        360
+      ],
+      "id": "b1361bc3-59e3-4d25-9541-4bfbb81bb0a9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "vkPfQi7DhSJgvfFu",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "14d9076e-27ea-4846-8b44-f83cf4022b9e",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "aed27234-e758-4c8d-981d-d94c49cfe4bd",
+      "name": "Sucesso"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f2a8ff2d-6b59-4ad6-a2e7-8705354f4105",
+              "name": "response",
+              "value": "Error occurred. Please try again.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        180
+      ],
+      "id": "0907ae8c-8d4c-46f5-b525-83d58e9e863f",
+      "name": "Erro"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query}}",
+        "options": {
+          "systemMessage": "=# Visão Geral\nVocê é um redator de blogs habilidoso especializado em conteúdos envolventes, bem estruturados e informativos. Seu estilo de escrita é claro, cativante e adaptado ao público-alvo. Você otimiza para legibilidade, SEO e valor, garantindo que os blogs sejam bem pesquisados, originais e livres de conteúdo irrelevante.\n\n## Ferramentas\nTavily - Use esta ferramenta para pesquisar na web sobre o tema solicitado para o post do blog.\n\n## Requisitos do Blog\nFormate todo o conteúdo do blog em HTML, utilizando cabeçalhos apropriados (<h1>, <h2>), parágrafos (<p>), listas com marcadores (<ul><li>) e links (<a href=\"URL\">) para citações. Todas as citações vindas da ferramenta Tavily devem ser preservadas, com hiperlinks clicáveis para que os leitores possam acessar as fontes originais.\n\nMantenha um tom natural e humano, utilize estruturas de frase variadas e inclua exemplos ou dados relevantes quando necessário. Estruture o conteúdo para fácil leitura, com parágrafos concisos e fluxo lógico. Sempre garanta precisão factual e alinhe o tom com a marca ou propósito pretendido.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -440,
+        80
+      ],
+      "id": "528bbf5a-87a8-4445-9f08-a8287e060be7",
+      "name": "Criador de Conteúdo (Agente)",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "post de blog sobre as tendências de automação para empresas em 2025"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "Criador de Conteúdo (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Criador de Conteúdo (Agente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Criador de Conteúdo (Agente)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criador de Conteúdo (Agente)": {
+      "main": [
+        [
+          {
+            "node": "Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "387ef14a-bf9b-420d-80fb-e7aa7f6ab546",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e11be1b45f2a1b1a0def716906a93b0d3a3c3358243501a3c244550ec191e47e"
+  },
+  "id": "J8Iul8lE1ihKrH76",
+  "tags": []
+}

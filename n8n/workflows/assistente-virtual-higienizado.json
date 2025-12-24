@@ -1,0 +1,410 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -680,
+        240
+      ],
+      "id": "244e4885-a0d9-4960-9f6e-af3a1d8403a8",
+      "name": "When chat message received",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        400
+      ],
+      "id": "afbecb82-e2b2-4e9e-8d88-c3f02d81e7c1",
+      "name": "OpenAI Chat Model2",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d78c60e8-6770-40ea-b559-bbc3f7c4e391",
+              "name": "chatInput",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "14d080f2-2c2a-412c-b6bc-3ee12c4a7a78",
+              "name": "sessionId",
+              "value": "={{$json.message.message_id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        180
+      ],
+      "id": "2ee1ec20-2926-4d70-8512-60abd84493c0",
+      "name": "Edit Fields1",
+      "credentials": {}
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        360,
+        400
+      ],
+      "id": "44dd13e8-6d35-4bab-af76-4089a51c743e",
+      "name": "Simple Memory1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "chatId": "chat_id",
+        "text": "={{$json[\"output\"]}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        180
+      ],
+      "id": "125de233-cce2-4fc7-9791-5758e9ee7aba",
+      "name": "Telegram Send",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize essa ferramenta quando precisar da hora ou dia atual para quando precisar obter alguma informa\u00e7\u00e3o.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ],
+      "id": "a547f777-ca43-407b-8d9d-dc576ec7e927",
+      "name": "Obter hora data atual1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=Voc\u00ea \u00e9 um assistente inteligente que sempre responde em portugu\u00eas do Brasil, de forma clara, objetiva e pr\u00e1tica.\nEst\u00e1 sempre dispon\u00edvel para tirar d\u00favidas e executar a\u00e7\u00f5es conforme solicitado noss meus e-mail e nas minhas agendas, utilizando as ferramentas conectadas a voc\u00ea.\nSeja proativo, educado e focado em me ajudar da melhor forma poss\u00edvel.\nData atual: {{ $now.format('FFFF') }}\n\nInforma\u00e7\u00f5es impirtantes:\nMeu nome \u00e9 Usu\u00e1rio\nTenho x anos, nasci em 0x/xx/19xx\nSou xxxx\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        380,
+        180
+      ],
+      "id": "144acf4b-382a-4720-a5aa-813e1eada131",
+      "name": "AI agent Agenda",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize essa ferramenta para obter os e-mails",
+        "operation": "getAll",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        580
+      ],
+      "id": "7e86bc46-b847-447d-a1d4-74fad20395f4",
+      "name": "Gmail Tool",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize essa ferramenta para obter os e-mail mais recentes, quando tiver falando dos e-mails do example@email.com",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "example@email.com",
+          "mode": "list",
+          "cachedResultName": "example@email.com"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        400
+      ],
+      "id": "8c5a8eea-179b-4dc0-9669-73c5b2de5dcf",
+      "name": "Google Calendar",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -680,
+        -100
+      ],
+      "id": "2718c4ff-99e3-46c2-bea1-0127ff3e3b0a",
+      "name": "Schedule Trigger1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -680,
+        60
+      ],
+      "id": "728932da-aa4a-469b-8f8c-ccc1d35b126c",
+      "name": "Schedule Trigger",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n\n  {\n\"message\": {\n\"message_id\": 459,\n\"text\": \"Verifique se recebi algum e-mail de pagamento essa semana\"\n}}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -100
+      ],
+      "id": "b55aa13a-b540-439b-9ded-def8d8ef42c4",
+      "name": "Verifica e-mails de pagamentos",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n\n  {\n\"message\": {\n\"message_id\": 459,\n\"text\": \"Verifique se tenho alguma agenda essa semana\"\n}}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        60
+      ],
+      "id": "bb9692dd-214b-4c3f-8ccf-6bf26353451c",
+      "name": "Verifica agendas da semana",
+      "credentials": {}
+    }
+  ],
+  "pinData": {
+    "When chat message received": [
+      {
+        "json": {
+          "update_id": 4560196532543,
+          "message": {
+            "message_id": 566545,
+            "from": {
+              "id": 5866343738135434,
+              "is_bot": false,
+              "first_name": "Usu\u00e1rio",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 58665453738435341,
+              "first_name": "Usu\u00e1rio",
+              "type": "private"
+            },
+            "date": 17503435515345446,
+            "text": "Passe um E-mail do email profissional para o conta_destino com uma frase de um pensador famoso"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter hora data atual1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI agent Agenda": {
+      "main": [
+        [
+          {
+            "node": "Telegram Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Verifica e-mails de pagamentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Verifica agendas da semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica e-mails de pagamentos": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica agendas da semana": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar usuario": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter emails Gen\u00e9rico": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI agent Agenda",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c125b831-fcce-4793-90bd-82ff9a86e4fd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8b142f32429d00d112009ed3bc0e60257f930db8cf40fd7c2141a1e6dba8e924b0"
+  },
+  "id": "234ZBVysDYM2XfhdrdgRmNcxD",
+  "tags": []
+}

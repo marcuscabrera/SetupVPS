@@ -1,0 +1,366 @@
+{
+  "name": "Agente de Contatos",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        360
+      ],
+      "id": "85520dff-43d4-478a-bf3b-36468ab1405b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "vkPfQi7DhSJgvfFu",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -740,
+        80
+      ],
+      "id": "84739132-f4a9-4417-9251-c9d927560c4f",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=# Visão Geral\nVocê é um assistente de gerenciamento de contatos. Suas responsabilidades incluem procurar contatos, adicionar novos contatos ou atualizar as informações de um contato.\n\n# Ferramentas Disponíveis\n\n## 1. **Buscar Contatos**\n- Use esta ferramenta para encontrar um contato específico no Google Contacts.\n- O usuário pode solicitar um contato usando o primeiro nome, sobrenome ou nome completo.\n- **Sempre utilize esta ferramenta primeiro antes de recuperar todos os contatos.**\n\n## 2. **Buscar Todos os Contatos do Google**\n- Recupera uma lista de todos os contatos armazenados no Google Contacts.\n- **Use esta ferramenta SOMENTE se \"Buscar Contatos\" não encontrar o contato solicitado.**\n- Isso garante buscas eficientes e evita chamadas desnecessárias na API.\n\n## 3. **Atualizar Contato**\n- Use esta ferramenta para atualizar um contato existente no Google Contacts.\n- **Antes de atualizar um contato, certifique-se de ter o Contact ID correto obtido através do \"Buscar Contatos\".**\n- **Nunca presuma um Contact ID — sempre utilize o ID recuperado na busca.**\n\n## 4. **Criar Contato**\n- Use esta ferramenta para armazenar novas informações de contato quando um contato não existir.\n- **Antes de criar um contato, verifique se \"Buscar Contatos\" e \"Buscar Todos os Contatos do Google\" não encontraram uma correspondência.**\n- Se o usuário quiser adicionar um novo contato, use esta ferramenta.\n\n\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -520,
+        80
+      ],
+      "id": "d0a398a9-bee6-4ee4-b768-6b0311cedee2",
+      "name": "Contatos (Agente)",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "fields": [
+          "addresses",
+          "emailAddresses",
+          "names",
+          "phoneNumbers",
+          "organizations",
+          "birthdays",
+          "nicknames",
+          "biographies",
+          "urls",
+          "events"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        440
+      ],
+      "id": "c8441d40-284c-4940-ab63-5f5d31fcff04",
+      "name": "Buscar Todos os Contatos do Google",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "6VjNXz7sHKxmOoUn",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "fields": [
+          "addresses",
+          "emailAddresses",
+          "names",
+          "phoneNumbers",
+          "organizations",
+          "birthdays",
+          "nicknames",
+          "biographies",
+          "urls",
+          "events"
+        ],
+        "useQuery": true,
+        "query": "={{ $fromAI('name', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        440
+      ],
+      "id": "e060a847-32ff-407a-957a-563312d0c606",
+      "name": "Buscar Contatos",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "6VjNXz7sHKxmOoUn",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "contactId": "={{ $fromAI('Contact_ID') }}",
+        "updateFields": {
+          "familyName": "={{ $fromAI('familyName') }}",
+          "givenName": "={{ $fromAI('givenName') }}",
+          "birthday": "={{ $fromAI('Birthday') }}",
+          "emailsUi": {
+            "emailsValues": [
+              {
+                "type": "home",
+                "value": "={{ $fromAI('emailAddress') }}"
+              }
+            ]
+          },
+          "phoneUi": {
+            "phoneValues": [
+              {
+                "type": "mobile",
+                "value": "={{ $fromAI('phoneNumber') }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        440
+      ],
+      "id": "d85a72ca-0029-44b7-8053-972c6a8fa003",
+      "name": "Atualizar Contato",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "6VjNXz7sHKxmOoUn",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "familyName": "={{ $fromAI('Family_Name', ``, 'string') }}",
+        "givenName": "={{ $fromAI('Given_Name', ``, 'string') }}",
+        "additionalFields": {
+          "birthday": "={{ $fromAI('Birthday', `Apenas adicione um aniversário caso seja requisitado. Não adicione um aniversário caso isso não tenha sido pedido.`, 'string') }}",
+          "emailsUi": {
+            "emailsValues": [
+              {
+                "type": "work",
+                "value": "={{ $fromAI('emailsValues0_Value', ``, 'string') }}"
+              }
+            ]
+          },
+          "biographies": "={{ $fromAI('Notes', ``, 'string') }}",
+          "phoneUi": {
+            "phoneValues": [
+              {
+                "type": "mobile",
+                "value": "={{ $fromAI('phoneValues0_Value', ``, 'string') }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        440
+      ],
+      "id": "c9d7784e-672b-45f7-90e1-2a540eca2f4d",
+      "name": "Criar Contato",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "6VjNXz7sHKxmOoUn",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4f360190-a717-4a93-8336-d03ea65975d5",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "084408f0-0e25-4503-ad0a-977130bedd5b",
+      "name": "Sucesso"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4f360190-a717-4a93-8336-d03ea65975d5",
+              "name": "response",
+              "value": "An error occurred. Please try again.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        180
+      ],
+      "id": "a3b74e26-e8a9-470c-ade4-797b6a0cedd2",
+      "name": "Erro"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "atualize o email do José Alfredo para josealfredo02@gmail.com"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contatos (Agente)": {
+      "main": [
+        [
+          {
+            "node": "Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Todos os Contatos do Google": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Contatos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Contato": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Contato": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erro": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "03308916-a44a-4a67-b277-db43f1337de6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e11be1b45f2a1b1a0def716906a93b0d3a3c3358243501a3c244550ec191e47e"
+  },
+  "id": "13US1zEvqUAwDKo3",
+  "tags": []
+}

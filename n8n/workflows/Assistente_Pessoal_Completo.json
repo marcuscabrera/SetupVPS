@@ -1,0 +1,682 @@
+{
+  "name": "Assistente Pessoal Completo",
+  "nodes": [
+    {
+      "parameters": {
+        "toolDescription": "Use essa ferramenta para fazer buscas na internet",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"api_key\": \"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\",\n    \"query\": \"{searchTerm}\",\n    \"search_depth\": \"basic\",\n    \"include_answer\": true,\n    \"topic\": \"news\",\n    \"include_raw_content\": true,\n    \"max_results\": 3\n} ",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "searchTerm",
+              "description": "What the user has requested to search the internet for",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2420,
+        500
+      ],
+      "id": "704b64f8-7106-4dfc-b0de-d35d82f864d5",
+      "name": "Tavily"
+    },
+    {
+      "parameters": {
+        "content": "# Agente Pai\n\n",
+        "height": 260,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        120
+      ],
+      "typeVersion": 1,
+      "id": "c5be9352-1ae6-46b8-9922-e5f327a011cc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## SubAgentes\n",
+        "height": 200,
+        "width": 900,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1440,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "d34fbffb-ca08-478e-976f-9267f3cd58ca",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "description": "=Use esta ferramenta para pensar sobre algo. Ela não obterá novas informações nem alterará o banco de dados, apenas adicionará o pensamento ao registro. Use-a somente quando for extremamente necessário raciocínio complexo ou algum tipo de memória temporária, mas sempre entregue o input enviado para essa ferramenta como parte do output. Sempre entregue informações recebidas como input no output dessa ferramenta think, pois essas infromações serão cruciais para um bom funcionamento dos demais agentes de IA do fluxo."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        780
+      ],
+      "id": "9bf6c457-2e46-4844-882d-e2ddfef35011",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "content": "# Think\n",
+        "height": 200,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        720
+      ],
+      "id": "895fc19f-e2c6-4ecb-9407-3fd216006430",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe7ecc99-e1e8-4a5e-bdd6-6fce9757b234",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "36074798-2456-4894-82aa-f80ea95f6b5b",
+      "name": "Set 'Text'",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1500,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "bc59d056-38d0-4e94-8da2-028d4a9c725c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8c844924-b2ed-48b0-935c-c66a8fd0c778",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "173b7906-a6b7-4836-9b67-d117e19fa687",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1220,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram (Gatilho)').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        520
+      ],
+      "id": "a9ca31c4-b596-4650-a729-c0034bc5ee90",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "content": "# 🛠️ Guia de Configuração  \n**Autor:** [Salu Sparo](https://www.youtube.com/@SaluSparo)\n\nSiga os passos abaixo para configurar seu Assistente Definitivo com os agentes de suporte:\n\n### ✅ Passo 1: Baixe os Arquivos JSON  \nBaixe os [arquivos JSON dos workflows](https://www.skool.com/ai-automation-society/new-video-i-built-the-ultimate-team-of-ai-agents-in-n8n-with-no-code-free-template?p=975cad50) para os seguintes agentes:  \n- **Agente de E-mail**  \n- **Agente de Calendário**  \n- **Agente de Contatos**  \n- **Agente Criador de Conteúdo**  \n\nCertifique-se de ter os quatro arquivos prontos para importação.\n\n### ✅ Passo 2: Importe e Conecte os Workflows  \nImporte cada arquivo JSON no n8n como um workflow separado.  \nDepois de importados, conecte cada agente ao workflow principal do assistente usando o nó de ferramenta apropriado. Isso garante uma delegação fluida e roteamento correto das respostas.\n\n### ✅ Passo 3: Conecte um Modelo de Chat a Cada Agente  \nPara funcionalidade completa, conecte um modelo de chat a cada um dos agentes:  \n- Um para o **assistente principal**  \n- Um para cada um dos agentes de **e-mail**, **calendário**, **contatos** e **conteúdo**  \n\nVocê pode usar modelos do OpenRouter, Anthropic ou qualquer outro provedor compatível.\n\n### ✅ Passo 4: Adicione as Credenciais Necessárias  \nVincule as credenciais necessárias ao fluxo de cada agente:  \n- **Gmail** (Agente de E-mail)  \n- **Google Calendar** (Agente de Calendário)  \n- **Airtable** (Agente de Contatos)  \n- **Tavily** (Assistente Principal e Agente Criador de Conteúdo)  \n\n### ✅ Passo 5: Conecte o Telegram  \nIntegre sua **conta do Telegram** para poder interagir com o assistente e receber mensagens em tempo real.  \n\n### 💡 Tudo Pronto!  \nDepois que tudo estiver conectado, comece a conversar com seu assistente e deixe que ele gerencie suas tarefas de e-mail, calendário, contatos e criação de conteúdo!\n\n",
+        "height": 940,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -20
+      ],
+      "id": "283ef03c-10c7-4054-bd7c-4b40cfcc5818",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        520
+      ],
+      "id": "5b15ef31-921b-41ef-ae97-795710b41933",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "vkPfQi7DhSJgvfFu",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "aaeb9d18-ed9d-416f-a702-3fd4f450172f",
+      "name": "Telegram (Gatilho)",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        220
+      ],
+      "webhookId": "99eab1a0-569d-4f0f-a49e-578a02abfe63",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxdywHbGBrtJKB9h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "id": "e8811f8f-29dd-4ffd-8223-e3460089e2fe",
+      "name": "Baixar Arquivo de Voz",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        80
+      ],
+      "webhookId": "c0b376b1-7b63-41b6-8063-0b3096b8333d",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxdywHbGBrtJKB9h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# Visão Geral\nVocê é um assistente pessoal. Seu trabalho é enviar a solicitação do usuário para a ferramenta correta. Você nunca deve escrever e-mails ou criar resumos — apenas precisa chamar a ferramenta certa.\n\n## Ferramentas\n- **Think**: Use esta ferramenta para pensar profundamente ou se ficar preso\n- **emailAgent**: Use esta ferramenta para realizar ações no e-mail\n- **calendarAgent**: Use esta ferramenta para realizar ações no calendário\n- **contactAgent**: Use esta ferramenta para obter, atualizar ou adicionar contatos\n- **contentCreator**: Use esta ferramenta para criar postagens de blog\n- **Tavily**: Use esta ferramenta para pesquisar na web\n\n## Regras\n- Algumas ações exigem que você busque informações de contato primeiro. Para as seguintes ações, é necessário obter as informações de contato e enviá-las ao agente responsável:\n  - enviar e-mails\n  - redigir e-mails\n  - criar evento no calendário com participante (sempre enviar o nome e email do contato)\n\n## Instruções\n1) Chame as ferramentas necessárias com base na solicitação do usuário  \n2) Use a ferramenta \"Think\" para verificar se você tomou as medidas corretas. Esta ferramenta deve ser chamada sempre que ficar preso ou precisar pensar profundamente.\n\n## Exemplos\n1)\n  - Entrada: envie um e-mail para o Felipe Almeida perguntando que horas ele quer sair\n  - Ação: Use o contactAgent para obter o e-mail do Felipe ALmeida\n  - Ação: Use o emailAgent para enviar o e-mail. Você passará à ferramenta uma solicitação como:  \n    \"envie um e-mail para Felipe Almeida perguntando que horas ele quer sair. aqui está o e-mail dele: [endereço de e-mail]\"\n- Saída: O e-mail foi enviado para Felipe Almeida. Posso ajudar em mais alguma coisa?\n\n## Lembretes Finais\nAqui está a data/hora atual: {{ $now }}\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1880,
+        220
+      ],
+      "id": "19765e30-19fd-4003-8a80-89b0b4da79ad",
+      "name": "Agente Pessoal Completo"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram (Gatilho)').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "9f4779f2-9d58-4fa7-aa7a-bf288f47110b",
+      "name": "Resposta",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2420,
+        220
+      ],
+      "webhookId": "682ca5ab-d30c-4ea5-bb25-c2f26206e761",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxdywHbGBrtJKB9h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        500
+      ],
+      "id": "f6b91894-84dd-42b7-a2d3-fd4389433405",
+      "name": "Calculadora"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "639d06c4-d720-4396-a01c-9b5638d3720b",
+      "name": "Áudio para Texto",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.6,
+      "position": [
+        1580,
+        80
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "vkPfQi7DhSJgvfFu",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "emailAgent",
+        "description": "Chame esta ferramenta para quaisquer ações relacionadas a e-mail.",
+        "workflowId": {
+          "__rl": true,
+          "value": "N53bnOcA26VE4nCO",
+          "mode": "list",
+          "cachedResultName": "Agente de Email"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        780
+      ],
+      "id": "c1afb7ea-e5a5-434d-9a36-a1077c560449",
+      "name": "Agente de Email"
+    },
+    {
+      "parameters": {
+        "name": "calendarAgent",
+        "description": "Chame esta ferramenta para quaisquer ações relacionadas ao calendário.",
+        "workflowId": {
+          "__rl": true,
+          "value": "9J536W4OBmoDvRGF",
+          "mode": "list",
+          "cachedResultName": "Agente de Calendário"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        780
+      ],
+      "id": "09e46f2e-a99e-48c2-93fc-fb6a4a9dc632",
+      "name": "Agente de Calendario"
+    },
+    {
+      "parameters": {
+        "name": "contactAgent",
+        "description": "Chame esta ferramenta para quaisquer ações relacionadas a contatos.",
+        "workflowId": {
+          "__rl": true,
+          "value": "13US1zEvqUAwDKo3",
+          "mode": "list",
+          "cachedResultName": "Agente de Contatos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        780
+      ],
+      "id": "a854bbb0-11ae-4aa0-b773-d9090a197b2d",
+      "name": "Agente de Contatos"
+    },
+    {
+      "parameters": {
+        "name": "contentCreator",
+        "description": "Chame esta ferramenta para criar postagens de blog.",
+        "workflowId": {
+          "__rl": true,
+          "value": "J8Iul8lE1ihKrH76",
+          "mode": "list",
+          "cachedResultName": "Agente Criador de Conteúdo"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        2180,
+        780
+      ],
+      "id": "996844bd-4d89-466d-99ef-6ea5e908f354",
+      "name": "Agente Criador de Conteúdo"
+    }
+  ],
+  "pinData": {
+    "Telegram (Gatilho)": [
+      {
+        "json": {
+          "update_id": 384112030,
+          "message": {
+            "message_id": 310,
+            "from": {
+              "id": 6412973990,
+              "is_bot": false,
+              "first_name": "Enzo",
+              "last_name": "Salustiano",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 6412973990,
+              "first_name": "Enzo",
+              "last_name": "Salustiano",
+              "type": "private"
+            },
+            "date": 1752185370,
+            "voice": {
+              "duration": 10,
+              "mime_type": "audio/ogg",
+              "file_id": "AwACAgEAAxkBAAIBNmhwOhol7_cIRrT55JlbREWzBMxiAALbBAACjb-AR2KRCKnNNitNNgQ",
+              "file_unique_id": "AgAD2wQAAo2_gEc",
+              "file_size": 67660
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Baixar Arquivo de Voz",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Text'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Text'": {
+      "main": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram (Gatilho)": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Arquivo de Voz": {
+      "main": [
+        [
+          {
+            "node": "Áudio para Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Pessoal Completo": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculadora": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Áudio para Texto": {
+      "main": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Calendario": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Contatos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Criador de Conteúdo": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Pessoal Completo",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "56457596-3342-4341-9828-f78a2d84ec83",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e11be1b45f2a1b1a0def716906a93b0d3a3c3358243501a3c244550ec191e47e"
+  },
+  "id": "3Sq3HYlVNvjCzbZP",
+  "tags": []
+}

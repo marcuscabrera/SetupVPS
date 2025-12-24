@@ -1,0 +1,358 @@
+{
+  "name": "Agente de Calendário",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "id": "24e55c3f-8179-4690-9042-d6ba800c5264",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -1460,
+        580
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "vkPfQi7DhSJgvfFu",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1680,
+        360
+      ],
+      "id": "28425116-c8f6-4fbe-bcf0-58bcc535b3be",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "agenciasparo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "agenciasparo@gmail.com"
+        },
+        "eventId": "={{ $fromAI(\"eventID\") }}",
+        "updateFields": {
+          "end": "={{ $fromAI(\"endTime\") }}",
+          "start": "={{ $fromAI(\"startTime\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -1340,
+        580
+      ],
+      "id": "5862fc5b-447a-4a29-9cb8-26e93c9ebf47",
+      "name": "Atualizar Evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "B9fLtCfH3kuhFQKh",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "agenciasparo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "agenciasparo@gmail.com"
+        },
+        "eventId": "={{ $fromAI(\"eventID\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -1220,
+        580
+      ],
+      "id": "255cfedb-3576-432f-95b8-ff203acc4d50",
+      "name": "Apagar Evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "B9fLtCfH3kuhFQKh",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "agenciasparo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "agenciasparo@gmail.com"
+        },
+        "timeMin": "={{ $fromAI(\"dayBefore\",\"the day before the date the user requested\") }}",
+        "timeMax": "={{ $fromAI(\"dayAfter\",\"the day after the date the user requested\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -1100,
+        580
+      ],
+      "id": "23b62235-ab4c-44e1-856d-8eda134ee2e5",
+      "name": "Buscar Eventos",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "B9fLtCfH3kuhFQKh",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "agenciasparo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "agenciasparo@gmail.com"
+        },
+        "start": "={{ $fromAI(\"eventStart\") }}",
+        "end": "={{ $fromAI(\"eventEnd\") }}",
+        "additionalFields": {
+          "attendees": [],
+          "summary": "={{ $fromAI(\"eventTitle\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -980,
+        580
+      ],
+      "id": "22412d47-58ab-406b-bffc-41e31d741e60",
+      "name": "Criar Evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "B9fLtCfH3kuhFQKh",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "agenciasparo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "agenciasparo@gmail.com"
+        },
+        "start": "={{ $fromAI(\"eventStart\") }}",
+        "end": "={{ $fromAI(\"eventEnd\") }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $fromAI(\"eventAttendeeEmail\") }}"
+          ],
+          "summary": "={{ $fromAI(\"eventTitle\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -860,
+        580
+      ],
+      "id": "9a4d3480-a156-4f42-ad12-888303ee18dc",
+      "name": "Criar Evento Com Participante",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "B9fLtCfH3kuhFQKh",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=# Visão Geral\nVocê é um assistente de calendário. Suas responsabilidades incluem criar, obter e excluir eventos no calendário do usuário. Sempre envie o link desse evento alterado/criado como parte do output.\n\n**Ferramentas de Gerenciamento de Calendário**  \n- Use **\"Criar Evento Com Participante\"** quando um evento incluir um participante.  \n- Use **\"Criar Evento\"** para eventos individuais.  \n- Use **\"Buscar Eventos\"** para buscar agendas do calendário quando solicitado.  \n- Use **\"Apagar Evento\"** para excluir um evento. Você deve usar primeiro o \"Buscar Eventos\" para obter o ID do evento a ser excluído.  \n- Use **\"Atualizar Evento\"** para atualizar um evento. Você deve usar primeiro o \"Buscar Eventos\" para obter o ID do evento a ser atualizado.\n\n## Observações Finais\nAqui está a data/hora atual: {{ $now }}  \nSe a duração de um evento não for especificada, assuma que terá uma hora.\n"
+        }
+      },
+      "id": "e39c3df3-f82f-416a-bf8b-0700c30cabf3",
+      "name": "Calendário (Agente)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -1248,
+        360
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39c2f302-03be-4464-a17a-d7cc481d6d44",
+              "name": "=response",
+              "value": "={{$json.output}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fa61d6ed-7c44-4433-a887-1ae1fd1ccd09",
+      "name": "Sucesso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7ab380a2-a8d3-421c-ab4e-748ea8fb7904",
+              "name": "response",
+              "value": "Unable to perform task. Please try again.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "878c8c43-42f0-43c9-8b35-1c862753aaf0",
+      "name": "Erro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        460
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apagar Evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Eventos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Evento Com Participante": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendário (Agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendário (Agente)": {
+      "main": [
+        [
+          {
+            "node": "Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3f178f22-871a-472f-b519-e1157c0cdee3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e11be1b45f2a1b1a0def716906a93b0d3a3c3358243501a3c244550ec191e47e"
+  },
+  "id": "9J536W4OBmoDvRGF",
+  "tags": []
+}

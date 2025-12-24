@@ -1,0 +1,195 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+bootcmd:
+  - [mkdir, -p, /etc/motd.d]
+
+write_files:
+  - path: /usr/local/sbin/n8n-setup.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      OWNER_EMAIL="admin@$(hostname).contaboserver.net"
+      OWNER_PASSWORD="<%= password %>"
+
+      apt-get update -y
+      apt-get install -y ca-certificates curl gnupg sqlite3 apache2-utils
+
+      # Docker
+      install -d -m 0755 /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      . /etc/os-release
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list
+      apt-get update -y
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+
+      install -d -m 0755 /opt/n8n/{n8n_data,caddy_data,caddy_config,import}
+      chown -R 1000:1000 /opt/n8n/n8n_data
+
+      DOMAIN="$(hostname).contaboserver.net"
+      N8N_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+
+      cat > /opt/n8n/stack.env <<EOF
+      N8N_HOST=${DOMAIN}
+      N8N_PORT=5678
+      N8N_PROTOCOL=https
+      WEBHOOK_URL=https://${DOMAIN}
+      N8N_EDITOR_BASE_URL=https://${DOMAIN}
+      N8N_SECURE_COOKIE=true
+      N8N_PUSH_BACKEND=websocket
+      N8N_PROXY_HOPS=1
+      N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      DB_SQLITE_POOL_SIZE=1
+      N8N_RUNNERS_ENABLED=true
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      EOF
+      chmod 0640 /opt/n8n/stack.env
+
+      cat > /opt/n8n/docker-compose.yml <<'EOF'
+      services:
+        n8n:
+          image: n8nio/n8n:stable
+          restart: unless-stopped
+          env_file: [ ./stack.env ]
+          volumes:
+            - ./n8n_data:/home/node/.n8n
+
+        caddy:
+          image: caddy:2
+          restart: unless-stopped
+          depends_on: [ n8n ]
+          ports: [ "80:80", "443:443" ]
+          volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ./caddy_data:/data
+            - ./caddy_config:/config
+      EOF
+
+      cat > /opt/n8n/Caddyfile <<EOF
+      {
+        email root@${DOMAIN}
+      }
+      ${DOMAIN} {
+        encode zstd gzip
+        reverse_proxy n8n:5678
+      }
+      EOF
+
+      # Create network / start ONLY n8n (no public exposure yet)
+      cd /opt/n8n
+      docker compose up -d n8n
+
+      export DEBIAN_FRONTEND=noninteractive
+      MAILNAME="${DOMAIN}"
+      echo "postfix postfix/mailname string ${MAILNAME}" | debconf-set-selections
+      echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-selections
+      apt-get install -y postfix
+
+      # Detect docker bridge IPs (docker0 + br-*)
+      BRIDGE_IPS="$(ip -4 addr show | awk '/inet / && ($NF=="docker0" || $NF ~ /^br-/){print $2}' | cut -d/ -f1)"
+      INET_IFS="127.0.0.1"
+      for ip in ${BRIDGE_IPS}; do INET_IFS="${INET_IFS}, ${ip}"; done
+
+      postconf -e "myhostname = ${MAILNAME}"
+      postconf -e "myorigin = ${MAILNAME}"
+      postconf -e "inet_interfaces = ${INET_IFS}"
+      postconf -e "mydestination ="
+      postconf -e "local_transport = error: local delivery disabled"
+      postconf -e "smtpd_banner = ${MAILNAME} ESMTP"
+      postconf -e "smtp_tls_security_level = may"
+      postconf -e "smtpd_relay_restrictions = permit_mynetworks,reject_unauth_destination"
+      postconf -e "inet_protocols = ipv4"
+      postconf -e "mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16"
+      systemctl restart postfix
+
+      SMTP_HOST="$(docker network inspect n8n_default -f '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"
+      if [ -z "${SMTP_HOST}" ]; then
+        SMTP_HOST="$(ip -4 addr show docker0 | awk '/inet /{print $2}' | cut -d/ -f1)"
+      fi
+      : "${SMTP_HOST:=172.17.0.1}"
+
+      cat >> /opt/n8n/stack.env <<EOF
+      N8N_EMAIL_MODE=smtp
+      N8N_SMTP_HOST=${SMTP_HOST}
+      N8N_SMTP_PORT=25
+      N8N_SMTP_SENDER=admin@${DOMAIN}
+      N8N_SMTP_SSL=false
+      N8N_SMTP_STARTTLS=false
+      EOF
+
+      docker compose up -d n8n
+
+      DB=/opt/n8n/n8n_data/database.sqlite
+
+      # wait for migrations to lay out tables
+      for t in user role project; do
+        for i in {1..180}; do
+          [ -f "$DB" ] && sqlite3 "$DB" ".tables" | grep -qw "$t" && break
+          sleep 2
+        done
+      done
+
+      # stop n8n to seed
+      docker compose stop n8n
+
+      NOW="$(date +'%Y-%m-%d %H:%M:%f')"
+      USER_ID="$(cat /proc/sys/kernel/random/uuid)"
+      HASH="$(htpasswd -nbBC 12 '' "${OWNER_PASSWORD}" | tr -d ':\n' | sed 's/^\$2y/\$2a/')"
+
+      sqlite3 "$DB" <<SQL
+      INSERT INTO user (id,email,firstName,lastName,password,createdAt,updatedAt,roleSlug)
+      SELECT '$USER_ID','$OWNER_EMAIL','Owner','', '$HASH', '$NOW', '$NOW', 'global:owner'
+      WHERE NOT EXISTS (SELECT 1 FROM user WHERE email='$OWNER_EMAIL');
+      SQL
+
+      sqlite3 "$DB" "INSERT INTO settings (key,value) VALUES ('userManagement.isInstanceOwnerSetUp','true')
+      ON CONFLICT(key) DO UPDATE SET value='true';"
+
+      # roles (detect role.id column)
+      if sqlite3 "$DB" "PRAGMA table_info(role);" | awk -F'|' '$2=="id"{f=1}END{exit !f}'; then
+        sqlite3 "$DB" "INSERT OR IGNORE INTO role(slug,displayName,description,roleType,systemRole,id) VALUES
+          ('project:personalOwner','Project Owner','Project Owner','project',1,'project:personalOwner'),
+          ('project:owner','Project Owner','Project Owner','project',1,'project:owner'),
+          ('project:viewer','Project Viewer','Project Viewer','project',1,'project:viewer');"
+      else
+        sqlite3 "$DB" "INSERT OR IGNORE INTO role(slug,displayName,description,roleType,systemRole) VALUES
+          ('project:personalOwner','Project Owner','Project Owner','project',1),
+          ('project:owner','Project Owner','Project Owner','project',1),
+          ('project:viewer','Project Viewer','Project Viewer','project',1);"
+      fi
+
+      # clean invalids
+      sqlite3 "$DB" "DELETE FROM user WHERE email='';"
+      sqlite3 "$DB" "DELETE FROM project_relation WHERE userId NOT IN (SELECT id FROM user);" || true
+
+      # link owner to personal project if table exists
+      if sqlite3 "$DB" "SELECT name FROM sqlite_master WHERE type='table' AND name='project_relation';" | grep -q project_relation; then
+        PROJ_ID="$(sqlite3 "$DB" "SELECT id FROM project LIMIT 1;")"
+        OWNER_ID="$(sqlite3 "$DB" "SELECT id FROM user WHERE email='$OWNER_EMAIL' LIMIT 1;")"
+        sqlite3 "$DB" "UPDATE project_relation SET role='project:personalOwner'
+                       WHERE projectId='$PROJ_ID' AND userId='$OWNER_ID';"
+        sqlite3 "$DB" "INSERT INTO project_relation(projectId,userId,role,createdAt,updatedAt)
+                       SELECT '$PROJ_ID','$OWNER_ID','project:personalOwner','$NOW','$NOW'
+                       WHERE NOT EXISTS (SELECT 1 FROM project_relation WHERE projectId='$PROJ_ID' AND userId='$OWNER_ID');"
+      fi
+
+      docker compose start n8n
+      docker compose exec -u root n8n sh -lc 'chown 1000:1000 /home/node/.n8n/config || true; chmod 0600 /home/node/.n8n/config || true'
+
+      docker compose up -d caddy
+
+  - path: /etc/motd.d/90-n8n
+    permissions: "0644"
+    content: |
+      ===============================================================================
+       n8n @ https://<%= hostname %>.contaboserver.net
+       Password is pre-seeded (user: admin@<%= hostname %>.contaboserver.net). Please change it after first login.
+      ===============================================================================
+
+runcmd:
+  - [bash, -lc, "/usr/local/sbin/n8n-setup.sh"]
+  - [bash, -lc, "rm -rf /usr/local/sbin/n8n-setup.sh"]
