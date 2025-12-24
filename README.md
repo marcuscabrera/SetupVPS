@@ -74,7 +74,3 @@ chmod +x Setup
 
 Este projeto é distribuído sob a licença **MIT**.
 Consulte o arquivo [LICENSE](LICENSE.txt) para mais detalhes.
-
----
-**Desenvolvido por Orion Design**
-*Contribua, modifique e distribua mantendo os créditos.*
