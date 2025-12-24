@@ -67,16 +67,8 @@ chmod +x Setup
 ./Setup
 ```
 
-1. O script irá verificar e instalar as dependências necessárias (Docker, jq, dialog, etc.) e em seguida abrirá o menu interativo do **Setup Orion**.
+1. O script irá verificar e instalar as dependências necessárias (Docker, jq, dialog, etc.) e em seguida abrirá o menu interativo do **Setup VPS**.
 2. Siga as instruções na tela para selecionar e configurar as aplicações desejadas.
-
-## 🤝 Comunidade e Suporte
-
-Participe da comunidade para tirar dúvidas e contribuir:
-
-* **Discord:** [Comunidade Orion Design](https://join.oriondesign.art.br)
-* **WhatsApp:** [Grupo de Suporte](https://hub.setuporion.com.br/grupo3)
-* **Site Oficial:** [Orion Design](https://oriondesign.art.br/setup)
 
 ## 📄 Licença
 

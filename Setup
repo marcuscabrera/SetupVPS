@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                         VPS SETUP                                            ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 ## Cores
@@ -13,7 +13,7 @@ vermelho="\e[91m"
 reset="\e[0m"
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                         VPS SETUP                                            ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 sudo apt update
@@ -21,7 +21,7 @@ sudo apt update
 sudo apt upgrade -y
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                         VPS SETUP                                            ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 nome_aviso(){
@@ -69,7 +69,7 @@ nome_iniciando(){
     echo -e "$amarelo=                  $branco ██║██║╚██╗██║██║██║     ██║██╔══██║██║╚██╗██║██║  ██║██║   ██║                $amarelo=$reset"
     echo -e "$amarelo=                  $branco ██║██║ ╚████║██║╚██████╗██║██║  ██║██║ ╚████║██████╔╝╚██████╔╝                $amarelo=$reset"
     echo -e "$amarelo=                  $branco ╚═╝╚═╝  ╚═══╝╚═╝ ╚═════╝╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝                 $amarelo=$reset"
-    echo -e "$amarelo=                                              v. 2.8.0                                           $amarelo=$reset"
+    echo -e "$amarelo=                                              v. 1.0.0                                           $amarelo=$reset"
     echo -e "$amarelo===================================================================================================$reset"
     echo ""
     echo ""
@@ -92,7 +92,7 @@ nome_verificando(){
     echo ""
 }
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                         VPS SETUP                                            ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 desc_ver(){
@@ -101,7 +101,7 @@ echo ""
 } 
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                           VPS SETUP                                        ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 clear
@@ -132,7 +132,7 @@ if [ "$PWD" != "/root" ]; then
 fi
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                         VPS SETUP                                            ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 
@@ -311,13 +311,13 @@ if [ -e "SetupOrion" ]; then
 fi
 
 # Baixa o script
-#curl -sSL https://raw.githubusercontent.com/oriondesign2015/SetupOrion/main/SetupOrion -o SetupOrion
-curl -sSL https://s3.setuporion.com.br/setuporion/SetupOrion -o SetupOrion
+curl -sSL https://raw.githubusercontent.com/marcuscabrera/SetupVPS/main/SetupVPS -o SetupVPS
+
 if [ $? -eq 0 ]; then
     echo "15/15 - [ OK ] - Baixando o script"
     # Executa o script baixado
-    chmod +x SetupOrion
-    ./SetupOrion
+    chmod +x SetupVPS
+    ./SetupVPS
 else
     echo "15/15 - [ OFF ] - Baixando o script"
     echo "Encerrando o setup"
@@ -326,11 +326,11 @@ fi
 
 
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
-##                                         ORION DESIGN                                        ##
+##                                           VPS SETUP                                        ##
 ## // ## // ## // ## // ## // ## // ## // ## //## // ## // ## // ## // ## // ## // ## // ## // ##
 
 sudo apt update
 sudo apt upgrade -y
 
 clear
-rm SetupOrion
+rm SetupVPS

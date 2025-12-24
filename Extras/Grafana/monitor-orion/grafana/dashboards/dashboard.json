@@ -2093,8 +2093,8 @@
       {
         "current": {
           "selected": false,
-          "text": "node.oriondesign.art.br:80",
-          "value": "node.oriondesign.art.br:80"
+          "text": "node.mvcapp.com.br:80",
+          "value": "node.mvcapp.com.br:80"
         },
         "datasource": {
           "type": "prometheus",
@@ -2218,8 +2218,8 @@
       {
         "current": {
           "selected": false,
-          "text": "node.oriondesign.art.br:80",
-          "value": "node.oriondesign.art.br:80"
+          "text": "node.mvcapp.com.br:80",
+          "value": "node.mvcapp.com.br:80"
         },
         "datasource": {
           "type": "prometheus",
